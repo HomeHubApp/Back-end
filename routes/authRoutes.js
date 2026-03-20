@@ -1,27 +1,34 @@
 import { Router } from "express";
-import passport, { Passport } from "passport";
-import authController from "../controllers/authController.js";
-import { protect } from "../config/passportConfig.js";
-
+import authController from "../controllers/authControllers/Login/authController.js";
+import { protect } from "../middlewares/authMiddleware.js";
+import passport from '../config/passportConfig.js';
 const authRouter = Router();
 
-//registration
+//publiv Routes
 authRouter.post("/register", authController.register);
 authRouter.post("/login", authController.login);
-//status
-authRouter.post("/status", protect, authController.status);
-//logout
 authRouter.post("/logout", authController.logout);
-
-//forgot password
 authRouter.post("/forgot-password", authController.forgotPassword);
-//reset  password
 authRouter.post("/reset-password/:token", authController.resetPassword);
-//2FA setup
-authRouter.post("/2fa/setup", protect, authController.setup2FA);
-//verifyToken
-authRouter.post("/verify", protect, authController.verify2FA);
-//Reset
-authRouter.post("/2fa/reset", protect, authController.reset2FA);
 
+authRouter.post("/2fa/verify", protect, authController.verify2FA);
+
+authRouter.post("/2fa/setup", protect, authController.setup2FA);
+authRouter.post("/2fa/reset", protect, authController.reset2FA);
+authRouter.get("/me", protect, authController.getMe);
+
+
+authRouter.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] }),
+);
+
+authRouter.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: `${process.env.FRONTEND_URL}/login?error=google_failed`,
+  }),
+  authController.googleCallback // only runs if passport succeeded
+);
 export default authRouter;

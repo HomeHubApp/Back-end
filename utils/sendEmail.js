@@ -1,18 +1,25 @@
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
+
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth:{
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false, 
+  },
 });
 
-export const sendEmail = async (to, subject, text) =>{
+export const sendEmail = async (to, subject, html) =>{
     await transporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: `HomeHub <${process.env.EMAIL_USER}>`,
         to, 
         subject,
-        text
+        html,
+        text: html.replace(/<[^>]+>/g, "")
     });
 };

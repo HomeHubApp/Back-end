@@ -1,25 +1,43 @@
-import jwt from "jsonwebtoken";
-import User from "../models/user.js";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { findOrCreateGoogleUser } from "../services/userService.js";
+import dotenv from "dotenv";  
 
-export const protect = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
+dotenv.config({override: true});
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "No token provided" });
-  }
 
-  const token = authHeader.split(" ")[1];
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    },
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const email = profile.emails?.[0]?.value;
 
-    // fetch full user from DB
-    const user = await User.findById(decoded.userId);
-    if (!user) return res.status(401).json({ message: "User not found" });
+        if (!email) {
+          return done(null, false, {
+            message: "Email not found",
+          });
+        }
 
-    req.user = user; 
-    next();
-  } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
-  }
-};
+        const user = await findOrCreateGoogleUser({
+          googleId: profile.id,
+          email,
+          fullname: profile.displayName || email.split("@")[0],
+        });
+
+        return done(null, user);
+      } catch (error) {
+        console.error(error);
+        return done(error, false, {
+          message: "Error logging in with Google",
+        });
+      }
+    },
+  ),
+);
+export default passport;

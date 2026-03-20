@@ -1,36 +1,38 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express, { json, urlencoded } from "express";
 import session from "express-session";
-import { Passport } from "passport";
-import dotenv from "dotenv";
 import cors from "cors";
 import passport from "passport";
-import dbConnect from "./config/db.js";
 import authRouter from "./routes/authRoutes.js";
-import "./config/passportConfig.js"
 import cookieParser from "cookie-parser";
+import './config/passportConfig.js';
 
-dotenv.config();// fetches environment variables from .env file
-dbConnect(); 
 const app =  express();
 
 
 //middlewares
 const corseOptions = {
-    origin: "http://localhost:3000",
-    Credentials: true,
+    origin: "http://localhost:5173",
+    credentials: true,
 };
 app.use(cors(corseOptions));
-app.use(json({limit: "100mb"}));
-app.use(urlencoded({limit: "100mb", extended: true}));
+app.use(json({limit: "1mb"}));
+app.use(urlencoded({limit: "1mb", extended: true}));
+app.use(cookieParser());
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: {maxAge: 1000 * 60 * 60 * 24 * 7}
+    cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+    httpOnly: true
+    }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(cookieParser());
 
 //routes
 app.use("/api/auth", authRouter);
