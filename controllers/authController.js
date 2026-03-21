@@ -4,7 +4,7 @@ import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { sendEmail } from "../../../utils/sendEmail.js";
+import { sendEmail } from "../utils/sendEmail.js";
 import {
   createUser,
   findUserByEmail,
@@ -15,7 +15,7 @@ import {
   updateUserPassword,
   updateUserResetToken,
   updateUserLastLogin,
-} from "../../../services/userService.js";
+} from "../services/userService.js";
 
 const cookieOptions = {
   httpOnly: true,
@@ -44,69 +44,70 @@ const signJwt = (user) =>
     { expiresIn: "1h" },
   );
 
-export const register = async (req, res) => {
-  try {
-    let { fullname, email, password, confirmPassword } = req.body; 
+  //goodness
+// export const register = async (req, res) => {
+//   try {
+//     let { fullname, email, password, confirmPassword } = req.body; 
 
-    if (!fullname || !email || !password || !confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required",
-      });
-    }
+//     if (!fullname || !email || !password || !confirmPassword) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "All fields are required",
+//       });
+//     }
 
-    fullname = fullname.trim();
-    email = email.trim().toLowerCase();
-    password = password.trim();
-    confirmPassword = confirmPassword.trim();
+//     fullname = fullname.trim();
+//     email = email.trim().toLowerCase();
+//     password = password.trim();
+//     confirmPassword = confirmPassword.trim();
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid email address",
-      });
-    }
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(email)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid email address",
+//       });
+//     }
 
-    if (password.length < 8) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must be at least 8 characters",
-      });
-    }
+//     if (password.length < 8) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Password must be at least 8 characters",
+//       });
+//     }
 
-    if (password !== confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Passwords do not match",
-      });
-    }
+//     if (password !== confirmPassword) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Passwords do not match",
+//       });
+//     }
 
-    const existingUser = await findUserByEmail(email);
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "Email is already in use",
-      });
-    }
+//     const existingUser = await findUserByEmail(email);
+//     if (existingUser) {
+//       return res.status(409).json({
+//         success: false,
+//         message: "Email is already in use",
+//       });
+//     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-    await createUser({ fullname, email, password: hashedPassword }); 
+//     const hashedPassword = await bcrypt.hash(password, 12);
+//     await createUser({ fullname, email, password: hashedPassword }); 
 
-    return res.status(201).json({
-      success: true,
-      message: "Account created successfully",
-    });
-  } catch (error) {
-    console.error("REGISTER ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error registering user",
-    });
-  }
-};
+//     return res.status(201).json({
+//       success: true,
+//       message: "Account created successfully",
+//     });
+//   } catch (error) {
+//     console.error("REGISTER ERROR:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Error registering user",
+//     });
+//   }
+// };
 
-// ─── Login ────────────────────────────────────────────────────────────────────
+
 export const login = async (req, res) => {
   try {
     const { email, password, rememberDevice } = req.body;
@@ -566,7 +567,7 @@ export const googleCallback = async (req, res) => {
   }
 };
 const authController = {
-  register,
+  // register,
   login,
   logout,
   setup2FA,

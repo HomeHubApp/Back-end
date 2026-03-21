@@ -1,11 +1,14 @@
 import { Router } from "express";
-import authController from "../controllers/authControllers/Login/authController.js";
+import authController from "../controllers/authController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import passport from '../config/passportConfig.js';
 const authRouter = Router();
 
 //publiv Routes
-authRouter.post("/register", authController.register);
+
+//goodness register
+//authRouter.post("/register", authController.register);
+
 authRouter.post("/login", authController.login);
 authRouter.post("/logout", authController.logout);
 authRouter.post("/forgot-password", authController.forgotPassword);

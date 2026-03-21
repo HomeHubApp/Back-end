@@ -8,6 +8,7 @@ import passport from "passport";
 import authRouter from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
 import './config/passportConfig.js';
+import deviceRouter from "./routes/deviceRoutes.js";
 
 const app =  express();
 
@@ -36,6 +37,7 @@ app.use(passport.session());
 
 //routes
 app.use("/api/auth", authRouter);
+app.use("api/devices", deviceRouter);
 
 const port = process.env.PORT || 5000;
 app.listen(port, ()=>{
