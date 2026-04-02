@@ -160,9 +160,7 @@ export const login = async (req, res) => {
       }
     }
 
-    // ── MFA check ─────────────────────────────────────────────────────────────
-    // Don't issue a JWT yet — frontend needs to collect the OTP first.
-    // We send back the userId so verify2FA knows who to verify.
+
     if (user.is_mfa_active) {
       return res.status(200).json({
         success: true,
@@ -172,7 +170,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // ── Standard login ────────────────────────────────────────────────────────
     if (rememberDevice) {
       const newDeviceToken = crypto.randomBytes(32).toString("hex");
 
@@ -214,8 +211,7 @@ export const login = async (req, res) => {
   }
 };
 
-// ─── Logout ───────────────────────────────────────────────────────────────────
-// JWT auth means logout is just clearing cookies — no DB call needed.
+// Logout 
 export const logout = async (req, res) => {
   try {
     res.clearCookie("token", cookieOptions);
@@ -233,7 +229,7 @@ export const logout = async (req, res) => {
   }
 };
 
-// ─── Setup 2FA ────────────────────────────────────────────────────────────────
+// ─── Setup 2FA 
 export const setup2FA = async (req, res) => {
   try {
     // req.user only has id and username from the JWT —
@@ -291,8 +287,7 @@ export const verify2FA = async (req, res) => {
       });
     }
 
-    // userId comes from the login response body — not from JWT
-    // because the user doesn't have a JWT yet at this point
+
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -379,7 +374,6 @@ export const reset2FA = async (req, res) => {
       });
     }
 
-    // Pass null for the secret and false for is_mfa_active
     await updateUser2FA(user.id, null, false);
 
     return res.status(200).json({
@@ -518,7 +512,6 @@ export const getMe = async (req, res) => {
       });
     }
 
-    // Never send sensitive fields to the frontend
     const {
       password,
       two_factor_secret,
