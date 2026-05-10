@@ -105,7 +105,7 @@ npm start
 If everything is wired correctly, the API should start on:
 
 ```text
-http://localhost:5000
+http://localhost:7001
 ```
 
 Or whatever `PORT` you set in `.env`.
@@ -162,7 +162,7 @@ npm run dev
 Your frontend should point to this API using:
 
 ```env
-VITE_API_BASE_URL=http://localhost:5000
+VITE_API_BASE_URL=http://localhost:7001
 ```
 
 If your backend runs on another port, use that port instead.
@@ -184,7 +184,6 @@ Health check:
 ## Auth Notes
 
 - Authentication is cookie-based. The browser must send credentials with requests.
-- There is no Laravel Sanctum setup in this backend.
 - Login may return an MFA challenge before the user session is fully established.
 - Google login redirects back to `FRONTEND_URL`.
 
