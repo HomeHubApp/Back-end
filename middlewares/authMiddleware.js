@@ -82,7 +82,7 @@ export const optionalAuth = (req, res, next) => {
   if (!token) return next();
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jsonwebtoken.verify(token, process.env.JWT_SECRET);
     req.user = {
       id: decoded.userId,
       username: decoded.username,

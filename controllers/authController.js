@@ -44,68 +44,77 @@ const signJwt = (user) =>
     { expiresIn: "1h" },
   );
 
-  //goodness
-// export const register = async (req, res) => {
-//   try {
-//     let { fullname, email, password, confirmPassword } = req.body; 
+export const register = async (req, res) => {
+  try {
+    let { fullname, email, password, confirmPassword } = req.body;
 
-//     if (!fullname || !email || !password || !confirmPassword) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "All fields are required",
-//       });
-//     }
+    if (!fullname || !email || !password || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
 
-//     fullname = fullname.trim();
-//     email = email.trim().toLowerCase();
-//     password = password.trim();
-//     confirmPassword = confirmPassword.trim();
+    fullname = fullname.trim();
+    email = email.trim().toLowerCase();
+    password = password.trim();
+    confirmPassword = confirmPassword.trim();
 
-//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//     if (!emailRegex.test(email)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid email address",
-//       });
-//     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email address",
+      });
+    }
 
-//     if (password.length < 8) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Password must be at least 8 characters",
-//       });
-//     }
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters",
+      });
+    }
 
-//     if (password !== confirmPassword) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Passwords do not match",
-//       });
-//     }
+    if (password !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
 
-//     const existingUser = await findUserByEmail(email);
-//     if (existingUser) {
-//       return res.status(409).json({
-//         success: false,
-//         message: "Email is already in use",
-//       });
-//     }
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "Email is already in use",
+      });
+    }
 
-//     const hashedPassword = await bcrypt.hash(password, 12);
-//     await createUser({ fullname, email, password: hashedPassword }); 
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const newUser = await createUser({
+      fullname,
+      email,
+      password: hashedPassword,
+    });
 
-//     return res.status(201).json({
-//       success: true,
-//       message: "Account created successfully",
-//     });
-//   } catch (error) {
-//     console.error("REGISTER ERROR:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Error registering user",
-//     });
-//   }
-// };
+    const token = signJwt(newUser);
+    setAuthCookie(res, token);
+
+    const { password: _password, ...safeUser } = newUser;
+
+    return res.status(201).json({
+      success: true,
+      message: "Account created successfully",
+      user: safeUser,
+    });
+  } catch (error) {
+    console.error("REGISTER ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error registering user",
+    });
+  }
+};
 
 
 export const login = async (req, res) => {
@@ -121,8 +130,6 @@ export const login = async (req, res) => {
 
     const user = await findUserByEmail(email.trim().toLowerCase());
 
-    // Same message for wrong email and wrong password —
-    // telling an attacker which one is correct helps them enumerate accounts
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -138,9 +145,7 @@ export const login = async (req, res) => {
       });
     }
 
-    // ── Trusted device check ──────────────────────────────────────────────────
-    // If the user has a trusted device cookie, verify it against the DB.
-    // If valid, skip MFA and issue a JWT immediately.
+
     const deviceToken = req.cookies?.trustedDevice;
     if (deviceToken) {
       const trustedDevices = user.trusted_devices || [];
@@ -173,7 +178,6 @@ export const login = async (req, res) => {
     if (rememberDevice) {
       const newDeviceToken = crypto.randomBytes(32).toString("hex");
 
-      // Prune any expired devices before adding the new one
       const existing = (user.trusted_devices || []).filter(
         (d) => new Date(d.expires) > new Date(),
       );
@@ -232,8 +236,7 @@ export const logout = async (req, res) => {
 // ─── Setup 2FA 
 export const setup2FA = async (req, res) => {
   try {
-    // req.user only has id and username from the JWT —
-    // fetch the full row to check is_mfa_active
+
     const user = await findUserById(req.user.id);
     if (!user) {
       return res.status(404).json({
@@ -275,7 +278,6 @@ export const setup2FA = async (req, res) => {
   }
 };
 
-// ─── Verify 2FA ───────────────────────────────────────────────────────────────
 export const verify2FA = async (req, res) => {
   try {
     const { token, userId, rememberDevice } = req.body;
@@ -314,7 +316,7 @@ export const verify2FA = async (req, res) => {
       secret: user.two_factor_secret,
       encoding: "base32",
       token,
-      window: 1, // allows 30 seconds of clock drift either side
+      window: 1, 
     });
 
     if (!verified) {
@@ -324,7 +326,6 @@ export const verify2FA = async (req, res) => {
       });
     }
 
-    // OTP is valid — now issue the JWT cookie, same as standard login
     if (rememberDevice) {
       const newDeviceToken = crypto.randomBytes(32).toString("hex");
       const existing = (user.trusted_devices || []).filter(
@@ -560,7 +561,7 @@ export const googleCallback = async (req, res) => {
   }
 };
 const authController = {
-  // register,
+  register,
   login,
   logout,
   setup2FA,

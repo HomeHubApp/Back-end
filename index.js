@@ -14,8 +14,9 @@ const app =  express();
 
 
 //middlewares
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 const corseOptions = {
-    origin: "http://localhost:5173",
+    origin: frontendUrl,
     credentials: true,
 };
 app.use(cors(corseOptions));
@@ -37,7 +38,13 @@ app.use(passport.session());
 
 //routes
 app.use("/api/auth", authRouter);
-app.use("api/devices", deviceRouter);
+app.use("/api/devices", deviceRouter);
+app.get("/api/health", (_req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "Server is healthy",
+    });
+});
 
 const port = process.env.PORT || 5000;
 app.listen(port, ()=>{

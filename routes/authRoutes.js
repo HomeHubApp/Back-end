@@ -6,15 +6,14 @@ const authRouter = Router();
 
 //publiv Routes
 
-//goodness register
-//authRouter.post("/register", authController.register);
+authRouter.post("/register", authController.register);
 
 authRouter.post("/login", authController.login);
 authRouter.post("/logout", authController.logout);
 authRouter.post("/forgot-password", authController.forgotPassword);
 authRouter.post("/reset-password/:token", authController.resetPassword);
 
-authRouter.post("/2fa/verify", protect, authController.verify2FA);
+authRouter.post("/2fa/verify", authController.verify2FA);
 
 authRouter.post("/2fa/setup", protect, authController.setup2FA);
 authRouter.post("/2fa/reset", protect, authController.reset2FA);

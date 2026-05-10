@@ -5,5 +5,6 @@ import { toggle } from "../controllers/deviceController.js";
 const deviceRouter = Router();
 
 deviceRouter.patch("/:id/toogle", protect, toggle);
+deviceRouter.patch("/:id/toggle", protect, toggle);
 
 export default deviceRouter;

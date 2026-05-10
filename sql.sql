@@ -1,4 +1,27 @@
--- ── 1. HOMES ─────────────────────────────────────────────────────────────────
+CREATE SCHEMA IF NOT EXISTS public;
+SET search_path TO public;
+
+-- ── 1. USERS ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS users (
+  id                    SERIAL PRIMARY KEY,
+  fullname              VARCHAR(150) NOT NULL,
+  username              VARCHAR(100),
+  email                 VARCHAR(255) NOT NULL UNIQUE,
+  password              VARCHAR(255),
+  google_id             VARCHAR(255) UNIQUE,
+  is_mfa_active         BOOLEAN NOT NULL DEFAULT FALSE,
+  two_factor_secret     VARCHAR(255),
+  trusted_devices       JSONB NOT NULL DEFAULT '[]'::jsonb,
+  reset_password_token  VARCHAR(255),
+  reset_password_expire TIMESTAMPTZ,
+  last_login            TIMESTAMPTZ,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
+
+-- ── 2. HOMES ─────────────────────────────────────────────────────────────────
 -- A user can have multiple homes (house, office, studio etc.)
 CREATE TABLE IF NOT EXISTS homes (
   id          SERIAL PRIMARY KEY,
@@ -15,7 +38,7 @@ CREATE TABLE IF NOT EXISTS homes (
 
 CREATE INDEX IF NOT EXISTS idx_homes_user ON homes (user_id);
 
--- ── 2. DEVICES ───────────────────────────────────────────────────────────────
+-- ── 3. DEVICES ───────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS devices (
   id            SERIAL PRIMARY KEY,
   home_id       INT          NOT NULL REFERENCES homes(id)  ON DELETE CASCADE,
@@ -35,7 +58,7 @@ CREATE INDEX IF NOT EXISTS idx_devices_home     ON devices (home_id);
 CREATE INDEX IF NOT EXISTS idx_devices_category ON devices (category);
 CREATE INDEX IF NOT EXISTS idx_devices_online   ON devices (is_online);
 
--- ── 3. DEVICE_STATUS ─────────────────────────────────────────────────────────
+-- ── 4. DEVICE_STATUS ─────────────────────────────────────────────────────────
 -- Stores current state of each device.
 -- One device can have multiple status rows (on_off + brightness + color etc.)
 CREATE TABLE IF NOT EXISTS device_status (

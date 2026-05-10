@@ -3,7 +3,7 @@ import pool from "../config/db.js";
 export const findDeviceById = async (deviceId, userId) => {
   try {
     const { rows } = await pool.query(
-      "SELECT FROM devices d JOIN homes h on d.home_id = h.id WHERE d.id = $1 AND h.user_id = $2 AND d.is_active = TRUE",
+      "SELECT d.* FROM devices d JOIN homes h ON d.home_id = h.id WHERE d.id = $1 AND h.user_id = $2 AND d.is_active = TRUE",
       [deviceId, userId],
     );
     return rows[0] || null;
