@@ -1,11 +1,12 @@
-import bcrypt from "bcrypt";
+// scripts/seed.js
 import dotenv from "dotenv";
+dotenv.config(); // MUST be before the pool import
+
+import bcrypt from "bcrypt";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import pool from "../config/db.js";
-
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
