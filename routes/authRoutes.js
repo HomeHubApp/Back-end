@@ -12,6 +12,7 @@ authRouter.post("/login", authController.login);
 authRouter.post("/logout", authController.logout);
 authRouter.post("/forgot-password", authController.forgotPassword);
 authRouter.post("/reset-password/:token", authController.resetPassword);
+authRouter.post("/verify-email", authController.verifyEmail);
 
 authRouter.post("/2fa/verify", authController.verify2FA);
 

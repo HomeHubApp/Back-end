@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS users (
   email                 VARCHAR(255) NOT NULL UNIQUE,
   password              VARCHAR(255),
   google_id             VARCHAR(255) UNIQUE,
+  email_otp              VARCHAR(6),
+  email_otp_expire       TIMESTAMPTZ,
+  is_verified           BOOLEAN NOT NULL DEFAULT FALSE,
   is_mfa_active         BOOLEAN NOT NULL DEFAULT FALSE,
   two_factor_secret     VARCHAR(255),
   trusted_devices       JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -72,3 +75,19 @@ CREATE TABLE IF NOT EXISTS device_status (
 );
 
 CREATE INDEX IF NOT EXISTS idx_device_status_device ON device_status (device_id);
+
+CREATE TABLE IF NOT EXISTS activity_log (
+  id            SERIAL PRIMARY KEY,
+  home_id       INT NOT NULL REFERENCES homes(id) ON DELETE CASCADE,
+  user_id       INT REFERENCES users(id) ON DELETE SET NULL,
+  device_id     INT REFERENCES devices(id) ON DELETE SET NULL,
+  action_type   VARCHAR(50) NOT NULL,
+  description   TEXT,
+  metadata      JSONB DEFAULT '{}'::jsonb,
+  performed_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activity_home    ON activity_log (home_id); 
+CREATE INDEX IF NOT EXISTS idx_activity_user    ON activity_log (user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_device  ON activity_log (device_id);
+CREATE INDEX IF NOT EXISTS idx_activity_type    ON activity_log (action_type);

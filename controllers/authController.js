@@ -15,6 +15,7 @@ import {
   updateUserPassword,
   updateUserResetToken,
   updateUserLastLogin,
+  markUserVerified,
 } from "../services/userService.js";
 
 const cookieOptions = {
@@ -91,21 +92,34 @@ export const register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     const newUser = await createUser({
       fullname,
       email,
       password: hashedPassword,
+      email_otp: otp,
+      email_otp_expire: otpExpire,
+      is_verified: false,
     });
 
-    const token = signJwt(newUser);
-    setAuthCookie(res, token);
+    await sendEmail(
+      email,
+      "HomeHub — Confirm Your Account",
+      `<p>Welcome to HomeHub!</p>
+     <p>Your confirmation code is:</p>
+     <h2 style="letter-spacing:8px;">${otp}</h2>
+     <p>This code expires in <strong>10 minutes</strong>.</p>`,
+    );
 
-    const { password: _password, ...safeUser } = newUser;
+    // const token = signJwt(newUser);
+    // setAuthCookie(res, token);
 
     return res.status(201).json({
       success: true,
-      message: "Account created successfully",
-      user: safeUser,
+      message: "Account created. Check your email for a confirmation code.",
+      userId: newUser.id,
     });
   } catch (error) {
     console.error("REGISTER ERROR:", error);
@@ -115,7 +129,6 @@ export const register = async (req, res) => {
     });
   }
 };
-
 
 export const login = async (req, res) => {
   try {
@@ -145,7 +158,6 @@ export const login = async (req, res) => {
       });
     }
 
-
     const deviceToken = req.cookies?.trustedDevice;
     if (deviceToken) {
       const trustedDevices = user.trusted_devices || [];
@@ -164,7 +176,6 @@ export const login = async (req, res) => {
         });
       }
     }
-
 
     if (user.is_mfa_active) {
       return res.status(200).json({
@@ -215,7 +226,7 @@ export const login = async (req, res) => {
   }
 };
 
-// Logout 
+// Logout
 export const logout = async (req, res) => {
   try {
     res.clearCookie("token", cookieOptions);
@@ -233,10 +244,9 @@ export const logout = async (req, res) => {
   }
 };
 
-// ─── Setup 2FA 
+// ─── Setup 2FA
 export const setup2FA = async (req, res) => {
   try {
-
     const user = await findUserById(req.user.id);
     if (!user) {
       return res.status(404).json({
@@ -289,7 +299,6 @@ export const verify2FA = async (req, res) => {
       });
     }
 
-
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -316,7 +325,7 @@ export const verify2FA = async (req, res) => {
       secret: user.two_factor_secret,
       encoding: "base32",
       token,
-      window: 1, 
+      window: 1,
     });
 
     if (!verified) {
@@ -401,7 +410,6 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
-    
     const genericResponse = {
       success: true,
       message: "If that email exists, a reset link has been sent",
@@ -539,9 +547,8 @@ export const googleCallback = async (req, res) => {
     const user = req.user;
 
     if (!user) {
-
       return res.redirect(
-        `${process.env.FRONTEND_URL}/login?error=google_failed`
+        `${process.env.FRONTEND_URL}/login?error=google_failed`,
       );
     }
 
@@ -550,14 +557,56 @@ export const googleCallback = async (req, res) => {
     const token = signJwt(user);
     setAuthCookie(res, token);
 
-
     return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
-
   } catch (error) {
     console.error("GOOGLE CALLBACK ERROR:", error);
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/login?error=server_error`
-    );
+    return res.redirect(`${process.env.FRONTEND_URL}/login?error=server_error`);
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+
+    const user = await findUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    } 
+
+    if (user.is_verified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already verified",
+      });
+    }
+
+    if (user.email_otp !== otp || new Date() > new Date(user.email_otp_expire)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired OTP",
+      });
+    }
+
+    await markUserVerified(user.id);
+
+    const token = signJwt(user);
+    setAuthCookie(res, token);
+
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+    });
+
+  } catch (error) {
+    console.error("VERIFY EMAIL ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error verifying email",
+    });
   }
 };
 const authController = {
@@ -569,6 +618,7 @@ const authController = {
   reset2FA,
   forgotPassword,
   resetPassword,
+  verifyEmail,
   googleCallback,
   getMe,
 };
