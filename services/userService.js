@@ -1,10 +1,12 @@
 import pool from "../config/db.js";
 
-export const createUser = async ({ fullname, password, email }) => {
+export const createUser = async ({ fullname, password, email, email_otp, email_otp_expire, is_verified }) => {
   try {
     const { rows } = await pool.query(
-      "INSERT INTO users (fullname, password, email) VALUES ($1, $2, $3) RETURNING *",
-      [fullname, password, email],
+      `INSERT INTO users (fullname, password, email, email_otp, email_otp_expire, is_verified) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING *`,
+      [fullname, password, email, email_otp, email_otp_expire, is_verified],
     );
     return rows[0];
   } catch (error) {
@@ -167,3 +169,13 @@ export const findOrCreateGoogleUser = async ({ googleId, email, fullname }) => {
     throw error;
   }
 };
+
+export const markUserVerified = async (userId) => {
+  const {rows} =  await pool.query(
+    `UPDATE users 
+    SET is_verified = true,email_otp = null, email_otp_expire = null , updated_at = NOW()
+    WHERE id = $1 RETURNING *`,
+    [userId]
+  );
+  return rows[0];
+}

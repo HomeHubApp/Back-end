@@ -26,8 +26,10 @@ async function seed() {
 
     await client.query("BEGIN");
 
-    await client.query("TRUNCATE TABLE device_status, devices, homes, users RESTART IDENTITY CASCADE");
-
+await client.query(`
+  DROP TABLE IF EXISTS activity_log, device_status, devices, homes, users CASCADE;
+`);
+await client.query(schemaSql); 
     const passwordHash = await bcrypt.hash("password123", 12);
 
     const userResult = await client.query(

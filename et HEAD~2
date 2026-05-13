@@ -1,0 +1,10 @@
+[33m68e2a41[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mkejisbranch[m[33m)[m remove real credentials from env.example
+[33m1fa081b[m fixed issues
+[33m188f7bb[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m BAckend refactored
+[33m231c223[m index.js fit for deployment on the cloud
+[33m3c2855b[m Minor fix on the readme.md
+[33m16fde06[m[33m ([m[1;31morigin/kejisbranch[m[33m)[m Backedn Synced
+[33m9f28d0d[m made changes
+[33m11cc48a[m sperated functions
+[33mae208a5[m keji's changes
+[33m911d5e2[m inital commit
